@@ -43,6 +43,8 @@ class EmuApi:
         while self._running_monitor:
             try:
                 st = self.emulator.get_status()
+                if st.get("ready", False):
+                    st["fps"] = self.adb.get_current_fps()
                 self._cached_status = st
                 
                 # Automatically enable keymapper when emulator is ready
@@ -53,6 +55,18 @@ class EmuApi:
             except Exception as e:
                 print(f"[Monitor] Error: {e}")
             time.sleep(2)
+
+    def go_back(self):
+        threading.Thread(target=self.adb.go_back, daemon=True).start()
+        return True
+
+    def go_home(self):
+        threading.Thread(target=self.adb.go_home, daemon=True).start()
+        return True
+
+    def go_recent_apps(self):
+        threading.Thread(target=self.adb.go_recent_apps, daemon=True).start()
+        return True
 
     def get_status(self):
         # Instant return from cache (0ms delay)

@@ -208,3 +208,28 @@ class ADBManager:
         except Exception as e:
             print(f"[ADB] Error applying spoofing: {e}")
 
+    def go_back(self):
+        self.keyevent(4)
+
+    def go_home(self):
+        self.keyevent(3)
+
+    def go_recent_apps(self):
+        self.keyevent(187)
+
+    def get_current_fps(self) -> int:
+        dev = self.get_target_device()
+        if not dev:
+            return 0
+        try:
+            res = self._run_cmd(["-s", dev, "shell", "dumpsys", "SurfaceFlinger", "--latency"])
+            lines = res.stdout.strip().splitlines()
+            if lines and lines[0].isdigit():
+                ns = int(lines[0])
+                if ns > 0:
+                    return int(round(1_000_000_000 / ns))
+        except Exception:
+            pass
+        return 60
+
+

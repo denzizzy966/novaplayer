@@ -31,6 +31,8 @@ function updateStatusUI(status) {
   const text = document.getElementById("statusText");
   const btn = document.getElementById("btnLaunch");
   const btnText = document.getElementById("btnLaunchText");
+  const fpsPill = document.getElementById("fpsPill");
+  const fpsValue = document.getElementById("fpsValue");
 
   pill.className = "status-pill";
 
@@ -40,18 +42,46 @@ function updateStatusUI(status) {
     btn.className = "btn btn-primary btn-glow";
     btnText.textContent = "Launch Emulator";
     btn.disabled = false;
+    if (fpsPill) fpsPill.classList.add("hidden");
   } else if (status.state === "booting") {
     pill.classList.add("status-booting");
     text.textContent = status.details || "Booting Android 14...";
     btn.className = "btn btn-outline";
     btnText.textContent = "Starting Engine...";
     btn.disabled = true;
+    if (fpsPill) fpsPill.classList.add("hidden");
   } else if (status.state === "running") {
     pill.classList.add("status-running");
     text.textContent = status.details || "Android 14 Ready";
     btn.className = "btn btn-outline";
     btnText.textContent = "Emulator Running";
     btn.disabled = false;
+    if (fpsPill) {
+      fpsPill.classList.remove("hidden");
+      if (status.fps) fpsValue.textContent = String(status.fps);
+    }
+  }
+}
+
+// Android Navigation Buttons
+async function goBack() {
+  if (window.pywebview) {
+    await window.pywebview.api.go_back();
+    showToast("◀️ Back");
+  }
+}
+
+async function goHome() {
+  if (window.pywebview) {
+    await window.pywebview.api.go_home();
+    showToast("⭕ Home");
+  }
+}
+
+async function goRecentApps() {
+  if (window.pywebview) {
+    await window.pywebview.api.go_recent_apps();
+    showToast("◽ Recent Apps");
   }
 }
 

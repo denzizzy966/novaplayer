@@ -24,6 +24,10 @@
         </div>
       </div>
       <div class="header-right">
+        <div id="fpsPill" class="fps-pill hidden">
+          <span class="fps-dot"></span>
+          <span id="fpsValue">--</span> FPS
+        </div>
         <div id="statusPill" class="status-pill status-stopped">
           <span class="status-dot"></span>
           <span id="statusText">Offline</span>
@@ -215,6 +219,26 @@
 
     <!-- BlueStacks / LDPlayer Floating Sidebar -->
     <aside class="sidebar-tools">
+      <!-- Android Navigation Group (Back, Home, Recent Apps) -->
+      <div class="sidebar-nav-group">
+        <button class="tool-btn nav-btn" title="Back / Kembali (Esc)" onclick="goBack()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+          <span>Back</span>
+        </button>
+
+        <button class="tool-btn nav-btn" title="Home / Beranda" onclick="goHome()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/></svg>
+          <span>Home</span>
+        </button>
+
+        <button class="tool-btn nav-btn" title="Recent Apps / Multitasking" onclick="goRecentApps()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+          <span>Apps</span>
+        </button>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
       <button class="tool-btn" title="Install APK" onclick="triggerApkInstall()">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span>APK</span>
