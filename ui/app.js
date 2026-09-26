@@ -1,5 +1,6 @@
 let currentStatus = { state: "stopped", ready: false };
 let isStartingOrStopping = false;
+let lastShownError = null;
 
 // Tab Switching
 document.querySelectorAll(".nav-tab").forEach(tab => {
@@ -91,6 +92,13 @@ async function pollStatus() {
     try {
       const status = await window.pywebview.api.get_status();
       updateStatusUI(status);
+      // Surface emulator launch failures (missing system image, SDK path, etc.) once
+      if (status.error && status.error !== lastShownError) {
+        lastShownError = status.error;
+        showToast(`⚠️ ${status.error}`, 10000);
+      } else if (!status.error) {
+        lastShownError = null;
+      }
       if (status.ready && document.querySelectorAll(".app-card:not(.empty-state)").length === 0) {
         loadInstalledApps();
       }

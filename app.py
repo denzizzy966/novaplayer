@@ -34,6 +34,7 @@ class EmuApi:
         
         # In-memory status cache so UI calls never block or lag
         self._cached_status = {"state": "stopped", "ready": False, "details": "Ready to launch"}
+        self._last_error = None  # last emulator launch failure, surfaced to the UI via get_status()
         self._running_monitor = True
         
         # Start background polling thread (runs independently of WinForms UI thread)
@@ -49,6 +50,8 @@ class EmuApi:
                 st = self._emulator.get_status()
                 if st.get("ready", False):
                     st["fps"] = self._adb.get_current_fps()
+                if self._last_error and not st.get("ready", False):
+                    st["error"] = self._last_error
                 self._cached_status = st
                 
                 # Automatically enable keymapper when emulator is ready
@@ -78,7 +81,18 @@ class EmuApi:
 
     def start_emulator(self):
         def worker():
-            self._emulator.start()
+            try:
+                res = self._emulator.start()
+            except Exception as e:
+                res = {"success": False, "message": f"Unexpected error while starting emulator: {e}"}
+            if not res.get("success", False):
+                msg = res.get("message", "Unknown error")
+                print(f"[Emulator] Launch failed: {msg}")
+                self._last_error = msg
+                self._cached_status = {"state": "stopped", "ready": False, "details": msg, "error": msg}
+            else:
+                print(f"[Emulator] {res.get('message', 'Launched')}")
+        self._last_error = None
         threading.Thread(target=worker, daemon=True).start()
         self._cached_status = {"state": "booting", "ready": False, "details": "Starting engine..."}
         return {"success": True, "message": "Launching emulator engine..."}
