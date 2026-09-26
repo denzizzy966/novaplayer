@@ -80,9 +80,16 @@ class EmulatorManager:
     def is_running(self) -> bool:
         if self.process and self.process.poll() is None:
             return True
-        # Also check if any emulator devices exist in ADB
+            
+        now = time.time()
+        # Avoid hammering ADB subprocess every 2s if emulator process is not active
+        if hasattr(self, '_last_dev_check') and (now - self._last_dev_check < 6):
+            return getattr(self, '_last_is_running', False)
+            
+        self._last_dev_check = now
         devs = self.adb.get_devices()
-        return len(devs) > 0
+        self._last_is_running = len(devs) > 0
+        return self._last_is_running
 
     def stop(self) -> dict:
         try:

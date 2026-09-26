@@ -169,7 +169,42 @@ class EmuApi:
         self._running_monitor = False
         self._keymapper.stop()
 
+def check_webview2() -> bool:
+    if sys.platform != "win32":
+        return True
+    try:
+        import winreg
+        keys = [
+            (winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'),
+            (winreg.HKEY_CURRENT_USER, r'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'),
+            (winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}')
+        ]
+        for root, subkey in keys:
+            try:
+                with winreg.OpenKey(root, subkey) as k:
+                    val, _ = winreg.QueryValueEx(k, 'pv')
+                    if val:
+                        return True
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return False
+
 def main():
+    if not check_webview2():
+        import ctypes
+        import webbrowser
+        msg = (
+            "NovaPlayer requires 'Microsoft Edge WebView2 Runtime' to render the modern gaming interface.\n\n"
+            "Without WebView2, Windows falls back to legacy Internet Explorer which causes freezing.\n\n"
+            "Would you like to open the official Microsoft download page to install it now?"
+        )
+        res = ctypes.windll.user32.MessageBoxW(0, msg, "NovaPlayer - Runtime Required", 0x00000004 | 0x00000030)
+        if res == 6:
+            webbrowser.open("https://go.microsoft.com/fwlink/p/?LinkId=2124703")
+        return
+
     if getattr(sys, 'frozen', False):
         bundle_dir = Path(getattr(sys, '_MEIPASS', Path(sys.executable).parent)).resolve()
         if (bundle_dir / "ui" / "index.html").exists():

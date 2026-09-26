@@ -50,14 +50,20 @@ Banyak game Android membatasi opsi grafik (seperti 90 FPS atau 120 FPS) jika men
 ## 🚀 Cara Menjalankan
 
 ### Cara 1: Menggunakan Executable (1-Klik Tanpa Perlu Install Python)
-Cukup klik dua kali pada file **`NovaPlayer.exe`**.
+1. Jika baru pertama kali di PC baru, Anda dapat menjalankan **`setup_dependencies.bat`** untuk memastikan sistem Windows Anda memiliki WebView2 Runtime dan Android SDK.
+2. Klik dua kali pada file **`NovaPlayer.exe`**.
+*(Catatan: Anda **TIDAK PERLU** menginstall Python atau package PIP karena seluruh runtime Python sudah terkompilasi mandiri di dalam `NovaPlayer.exe`)*.
 
 ### Cara 2: Menjalankan dari Source Code (Python)
+Jika ingin menjalankan dari source code:
 ```powershell
+# Jalankan setup untuk auto-install dependensi Python & cek sistem
+.\setup_dependencies.bat
+
 # Jalankan menggunakan batch script
 .\start.bat
 
-# Atau via python
+# Atau via python langsung
 python app.py
 ```
 
@@ -67,10 +73,15 @@ python app.py
 
 1. Pastikan fitur **Windows Hypervisor Platform** aktif di Windows:
    * Buka *Turn Windows features on or off* -> Centang **Windows Hypervisor Platform** & **Virtual Machine Platform**.
-2. Pastikan **Android SDK** terpasang dengan emulator & system image Android 14 (`system-images;android-34;google_apis_playstore;x86_64`).
-3. Clone repositori ini:
+2. **Microsoft Edge WebView2 Runtime**:
+   * Windows 11 sudah menyediakannya secara default.
+   * Pada Windows 10 jika belum ada, `setup_dependencies.bat` akan otomatis mengunduh dan memasangnya agar antarmuka UI tidak *freeze/not responding*.
+3. **Android SDK & System Image Android 14**:
+   * Pastikan terpasang Android emulator & system image Android 14 (`system-images;android-34;google_apis_playstore;x86_64`) via Android Studio atau SDK CLI.
+   * Path SDK bisa diatur langsung melalui tab **Settings** di antarmuka NovaPlayer jika berada di folder non-standar.
+4. Clone atau update repositori ini:
    ```bash
    git clone https://github.com/denzizzy966/novaplayer.git
    cd novaplayer
    ```
-4. Buka **`NovaPlayer.exe`** dan klik **"Launch Emulator"**.
+5. Buka **`NovaPlayer.exe`** dan klik **"Launch Emulator"**.
