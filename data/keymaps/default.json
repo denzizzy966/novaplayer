@@ -1,0 +1,22 @@
+{
+  "name": "Default Action & RPG",
+  "screen_width": 1600,
+  "screen_height": 900,
+  "dpad": {
+    "enabled": true,
+    "center_x": 260,
+    "center_y": 680,
+    "radius": 100
+  },
+  "keys": {
+    "space": { "x": 1460, "y": 760, "label": "Jump / Attack" },
+    "f": { "x": 1340, "y": 620, "label": "Interact" },
+    "q": { "x": 1200, "y": 780, "label": "Skill 1" },
+    "e": { "x": 1320, "y": 780, "label": "Skill 2" },
+    "r": { "x": 1420, "y": 620, "label": "Ultimate" },
+    "1": { "x": 1100, "y": 850, "label": "Item 1" },
+    "2": { "x": 1180, "y": 850, "label": "Item 2" },
+    "tab": { "x": 80, "y": 120, "label": "Map / Bag" },
+    "escape": { "x": 60, "y": 50, "label": "Menu / Back" }
+  }
+}

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovaPlayer - Android 14 Gaming Emulator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"/>
+            <circle cx="9" cy="9" r="1.5"/>
+            <circle cx="15" cy="9" r="1.5"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>NovaPlayer <span class="badge">Android 14 x86_64</span></h1>
+          <p class="subtitle">Next-Gen Gaming Engine • WHPX & Direct GPU Host</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div id="statusPill" class="status-pill status-stopped">
+          <span class="status-dot"></span>
+          <span id="statusText">Offline</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div class="main-body">
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button class="nav-tab active" data-tab="dashboard">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </button>
+        <button class="nav-tab" data-tab="keymapper">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="6" cy="12" r="1"/><circle cx="10" cy="12" r="1"/><path d="M15 9h4v6h-4z"/></svg>
+          Keymapping Studio
+        </button>
+        <button class="nav-tab" data-tab="settings">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </button>
+      </nav>
+
+      <!-- Tab 1: Dashboard -->
+      <section id="tab-dashboard" class="tab-pane active">
+        <!-- Hero Launch Panel -->
+        <div class="hero-panel">
+          <div class="hero-info">
+            <h2>Android 14 Gaming Instance</h2>
+            <p>Direct GPU host rendering, Google Play Store, and ARM64 binary translation ready.</p>
+            <div class="hardware-specs">
+              <span class="spec-tag" id="specCpu">4 Cores</span>
+              <span class="spec-tag" id="specRam">4096 MB RAM</span>
+              <span class="spec-tag" id="specRes">1600×900 Landscape</span>
+              <span class="spec-tag glow">WHPX Active</span>
+            </div>
+          </div>
+          <div class="hero-actions">
+            <button id="btnLaunch" class="btn btn-primary btn-glow" onclick="toggleEmulator()">
+              <span class="btn-icon">⚡</span>
+              <span id="btnLaunchText">Launch Emulator</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Launch Apps Grid -->
+        <div class="section-card">
+          <div class="card-header">
+            <h3>Installed Applications & Games</h3>
+            <button class="btn btn-sm btn-outline" onclick="loadInstalledApps()">Refresh</button>
+          </div>
+          <div id="appsList" class="apps-grid">
+            <div class="app-card empty-state">
+              <span>Start the emulator to view and launch installed games.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="toast" class="toast hidden"></div>
+      </section>
+
+      <!-- Tab 2: Keymapper Studio -->
+      <section id="tab-keymapper" class="tab-pane">
+        <div class="keymapper-header">
+          <div class="keymapper-controls">
+            <label>Profile:</label>
+            <select id="keymapProfileSelect" onchange="switchKeymapProfile()"></select>
+            <button class="btn btn-sm btn-outline" onclick="saveCurrentKeymap()">Save Profile</button>
+            <button class="btn btn-sm btn-outline" onclick="resetDefaultKeymap()">Reset Default</button>
+          </div>
+          <div class="keymapper-toggle">
+            <label class="switch">
+              <input type="checkbox" id="keymapperSwitch" checked onchange="toggleKeymapperActive()">
+              <span class="slider round"></span>
+            </label>
+            <span class="switch-label">Enable Keymapper</span>
+          </div>
+        </div>
+
+        <div class="keymapper-canvas-wrapper">
+          <div class="screen-canvas" id="screenCanvas">
+            <!-- Simulated Android Screen Landscape 16:9 -->
+            <div class="screen-hint">Keymapping Overlay (1600 × 900)</div>
+            
+            <!-- WASD Virtual D-Pad -->
+            <div class="dpad-overlay" id="dpadWidget" style="left: 15%; top: 70%;">
+              <div class="dpad-btn up">W</div>
+              <div class="dpad-middle">
+                <div class="dpad-btn left">A</div>
+                <div class="dpad-center">WASD</div>
+                <div class="dpad-btn right">D</div>
+              </div>
+              <div class="dpad-btn down">S</div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="key-bubble" style="right: 8%; bottom: 12%;" data-key="space">
+              <span class="key-badge">SPACE</span>
+              <span class="key-title">Jump</span>
+            </div>
+            <div class="key-bubble" style="right: 15%; bottom: 25%;" data-key="f">
+              <span class="key-badge">F</span>
+              <span class="key-title">Interact</span>
+            </div>
+            <div class="key-bubble" style="right: 22%; bottom: 10%;" data-key="q">
+              <span class="key-badge">Q</span>
+              <span class="key-title">Skill 1</span>
+            </div>
+            <div class="key-bubble" style="right: 15%; bottom: 10%;" data-key="e">
+              <span class="key-badge">E</span>
+              <span class="key-title">Skill 2</span>
+            </div>
+            <div class="key-bubble" style="right: 8%; bottom: 25%;" data-key="r">
+              <span class="key-badge">R</span>
+              <span class="key-title">Ultimate</span>
+            </div>
+          </div>
+        </div>
+        <p class="canvas-footer-note">ℹ️ Keys trigger automatically when you play inside the Android Emulator window.</p>
+      </section>
+
+      <!-- Tab 3: Settings -->
+      <section id="tab-settings" class="tab-pane">
+        <div class="settings-form">
+          <div class="setting-group">
+            <label>RAM Allocation (MB)</label>
+            <select id="cfgRam">
+              <option value="2048">2048 MB (2 GB)</option>
+              <option value="4096" selected>4096 MB (4 GB - Recommended)</option>
+              <option value="6144">6144 MB (6 GB)</option>
+              <option value="8192">8192 MB (8 GB - High End)</option>
+            </select>
+          </div>
+
+          <div class="setting-group">
+            <label>CPU Cores</label>
+            <select id="cfgCores">
+              <option value="2">2 Cores</option>
+              <option value="4" selected>4 Cores (Recommended)</option>
+              <option value="6">6 Cores</option>
+              <option value="8">8 Cores</option>
+            </select>
+          </div>
+
+          <div class="setting-group">
+            <label>Screen Resolution</label>
+            <select id="cfgRes">
+              <option value="1280x720">1280 × 720 (HD - 16:9)</option>
+              <option value="1600x900" selected>1600 × 900 (Balanced - 16:9)</option>
+              <option value="1920x1080">1920 × 1080 (Full HD - 16:9)</option>
+            </select>
+          </div>
+
+          <div class="setting-group">
+            <label>Graphics Rendering Engine</label>
+            <select id="cfgGpu">
+              <option value="host" selected>Host GPU Direct (Vulkan / OpenGL - Maximum FPS)</option>
+              <option value="angle_indirect">DirectX 11 / ANGLE</option>
+              <option value="swiftshader_indirect">Software (Slow)</option>
+            </select>
+          <div class="setting-group">
+            <label>Device Model Identity (Spoofing for Game FPS)</label>
+            <select id="cfgDevice">
+              <option value="asus_rog_8" selected>ASUS ROG Phone 8 Ultimate (Unlock 120 FPS)</option>
+              <option value="samsung_s24">Samsung Galaxy S24 Ultra</option>
+              <option value="blackshark_5">Xiaomi Black Shark 5 Pro</option>
+              <option value="pixel_8_pro">Google Pixel 8 Pro</option>
+              <option value="tablet_gaming">NovaPlayer Gaming Tablet (16:9)</option>
+            </select>
+          </div>
+
+          <div class="setting-group">
+            <label>Target Refresh Rate / FPS</label>
+            <select id="cfgFps">
+              <option value="60">60 FPS (Standard)</option>
+              <option value="90">90 FPS (High Performance)</option>
+              <option value="120" selected>120 FPS (Ultra Gaming - Best for RTX)</option>
+              <option value="144">144 FPS (Max Refresh Rate)</option>
+            </select>
+          </div>
+
+          <button class="btn btn-primary" onclick="saveSettings()">Save & Apply Settings</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- BlueStacks / LDPlayer Floating Sidebar -->
+    <aside class="sidebar-tools">
+      <button class="tool-btn" title="Install APK" onclick="triggerApkInstall()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>APK</span>
+      </button>
+
+      <button class="tool-btn" title="Take Screenshot" onclick="takeScreenshot()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span>Shot</span>
+      </button>
+
+      <button class="tool-btn" title="Open Screenshots" onclick="openScreenshots()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span>Gallery</span>
+      </button>
+
+      <button class="tool-btn" title="Rotate Screen" onclick="rotateScreen()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <span>Rotate</span>
+      </button>
+
+      <button class="tool-btn" title="Volume Up" onclick="volumeUp()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        <span>Vol+</span>
+      </button>
+
+      <button class="tool-btn" title="Volume Down" onclick="volumeDown()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        <span>Vol-</span>
+      </button>
+
+      <button class="tool-btn danger" title="Stop Emulator" onclick="stopEmulator()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6"/></svg>
+        <span>Power</span>
+      </button>
+    </aside>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

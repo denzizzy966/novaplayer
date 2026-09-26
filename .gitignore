@@ -1,0 +1,21 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller build cache
+build/
+*.spec
+
+# Runtime logs
+*.log
+novaplayer.log
+
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Ignore actual user screenshots but keep folder
+screenshots/*.png
+!screenshots/.gitkeep
