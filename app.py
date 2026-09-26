@@ -5,14 +5,40 @@ import time
 from pathlib import Path
 import webview
 
-# Handle stdout/stderr for frozen/noconsole mode
-if getattr(sys, 'frozen', False) or sys.stdout is None:
-    try:
-        log_path = Path(sys.executable).parent / "novaplayer.log" if getattr(sys, 'frozen', False) else Path(__file__).parent / "novaplayer.log"
-        log_file = open(log_path, "a", encoding="utf-8", buffering=1)
+# Handle stdout/stderr logging (writes to novaplayer.log in all modes)
+try:
+    log_path = Path(sys.executable).parent / "novaplayer.log" if getattr(sys, 'frozen', False) else Path(__file__).parent / "novaplayer.log"
+    log_file = open(log_path, "a", encoding="utf-8", buffering=1)
+    if getattr(sys, 'frozen', False) or sys.stdout is None:
         sys.stdout = log_file
         sys.stderr = log_file
-    except Exception:
+    else:
+        class Tee:
+            def __init__(self, f1, f2):
+                self.f1 = f1
+                self.f2 = f2
+            def write(self, text):
+                try:
+                    self.f1.write(text)
+                except Exception:
+                    pass
+                try:
+                    self.f2.write(text)
+                except Exception:
+                    pass
+            def flush(self):
+                try:
+                    self.f1.flush()
+                except Exception:
+                    pass
+                try:
+                    self.f2.flush()
+                except Exception:
+                    pass
+        sys.stdout = Tee(sys.stdout, log_file)
+        sys.stderr = Tee(sys.stderr, log_file)
+except Exception:
+    if getattr(sys, 'frozen', False) or sys.stdout is None:
         sys.stdout = open(os.devnull, "w")
         sys.stderr = open(os.devnull, "w")
 
@@ -93,8 +119,8 @@ class EmuApi:
             else:
                 print(f"[Emulator] {res.get('message', 'Launched')}")
         self._last_error = None
-        threading.Thread(target=worker, daemon=True).start()
         self._cached_status = {"state": "booting", "ready": False, "details": "Starting engine..."}
+        threading.Thread(target=worker, daemon=True).start()
         return {"success": True, "message": "Launching emulator engine..."}
 
     def stop_emulator(self):
