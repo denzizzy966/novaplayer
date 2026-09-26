@@ -22,11 +22,15 @@ from core.emulator import EmulatorManager
 from core.keymapper import Keymapper
 
 class EmuApi:
+    # NOTE: pywebview walks every PUBLIC attribute of this object (recursively) when it
+    # injects window.pywebview.api. Any attribute that is not meant to be called from JS
+    # (especially the webview Window itself) MUST be prefixed with "_" or pywebview will
+    # touch window.dom.* properties on the UI thread and freeze the app ("Not Responding").
     def __init__(self, window=None):
-        self.window = window
-        self.adb = ADBManager()
-        self.emulator = EmulatorManager()
-        self.keymapper = Keymapper(self.adb)
+        self._window = window
+        self._adb = ADBManager()
+        self._emulator = EmulatorManager()
+        self._keymapper = Keymapper(self._adb)
         
         # In-memory status cache so UI calls never block or lag
         self._cached_status = {"state": "stopped", "ready": False, "details": "Ready to launch"}
@@ -37,35 +41,35 @@ class EmuApi:
         self._monitor_thread.start()
 
     def set_window(self, window):
-        self.window = window
+        self._window = window
 
     def _status_monitor_loop(self):
         while self._running_monitor:
             try:
-                st = self.emulator.get_status()
+                st = self._emulator.get_status()
                 if st.get("ready", False):
-                    st["fps"] = self.adb.get_current_fps()
+                    st["fps"] = self._adb.get_current_fps()
                 self._cached_status = st
                 
                 # Automatically enable keymapper when emulator is ready
-                if st.get("ready", False) and not self.keymapper.is_active:
-                    self.keymapper.start()
-                elif not st.get("ready", False) and self.keymapper.is_active:
-                    self.keymapper.stop()
+                if st.get("ready", False) and not self._keymapper.is_active:
+                    self._keymapper.start()
+                elif not st.get("ready", False) and self._keymapper.is_active:
+                    self._keymapper.stop()
             except Exception as e:
                 print(f"[Monitor] Error: {e}")
             time.sleep(2)
 
     def go_back(self):
-        threading.Thread(target=self.adb.go_back, daemon=True).start()
+        threading.Thread(target=self._adb.go_back, daemon=True).start()
         return True
 
     def go_home(self):
-        threading.Thread(target=self.adb.go_home, daemon=True).start()
+        threading.Thread(target=self._adb.go_home, daemon=True).start()
         return True
 
     def go_recent_apps(self):
-        threading.Thread(target=self.adb.go_recent_apps, daemon=True).start()
+        threading.Thread(target=self._adb.go_recent_apps, daemon=True).start()
         return True
 
     def get_status(self):
@@ -74,40 +78,40 @@ class EmuApi:
 
     def start_emulator(self):
         def worker():
-            self.emulator.start()
+            self._emulator.start()
         threading.Thread(target=worker, daemon=True).start()
         self._cached_status = {"state": "booting", "ready": False, "details": "Starting engine..."}
         return {"success": True, "message": "Launching emulator engine..."}
 
     def stop_emulator(self):
         def worker():
-            self.emulator.stop()
+            self._emulator.stop()
         threading.Thread(target=worker, daemon=True).start()
         self._cached_status = {"state": "stopped", "ready": False, "details": "Stopping engine..."}
         return {"success": True, "message": "Stopping Android emulator..."}
 
     def install_apk_dialog(self):
-        if not self.window:
+        if not self._window:
             return {"success": False, "message": "Window context not ready."}
         
         try:
             file_types = ('Android Packages (*.apk)', 'All files (*.*)')
-            result = self.window.create_file_dialog(webview.OPEN_DIALOG, allow_multiple=False, file_types=file_types)
+            result = self._window.create_file_dialog(webview.OPEN_DIALOG, allow_multiple=False, file_types=file_types)
             if result and len(result) > 0:
                 apk_path = result[0]
-                return self.adb.install_apk(apk_path)
+                return self._adb.install_apk(apk_path)
             return {"success": False, "message": "No file selected."}
         except Exception as e:
             return {"success": False, "message": str(e)}
 
     def list_apps(self):
-        return self.adb.list_installed_apps()
+        return self._adb.list_installed_apps()
 
     def launch_app(self, package_name):
-        return self.adb.launch_app(package_name)
+        return self._adb.launch_app(package_name)
 
     def take_screenshot(self):
-        file_path = self.adb.take_screenshot()
+        file_path = self._adb.take_screenshot()
         if file_path:
             filename = Path(file_path).name
             return {"success": True, "filename": filename, "path": file_path}
@@ -122,15 +126,15 @@ class EmuApi:
             return False
 
     def volume_up(self):
-        threading.Thread(target=self.adb.volume_up, daemon=True).start()
+        threading.Thread(target=self._adb.volume_up, daemon=True).start()
         return True
 
     def volume_down(self):
-        threading.Thread(target=self.adb.volume_down, daemon=True).start()
+        threading.Thread(target=self._adb.volume_down, daemon=True).start()
         return True
 
     def rotate_screen(self, orientation):
-        threading.Thread(target=self.adb.rotate_screen, args=(orientation,), daemon=True).start()
+        threading.Thread(target=self._adb.rotate_screen, args=(orientation,), daemon=True).start()
         return True
 
     def get_settings(self):
@@ -145,25 +149,25 @@ class EmuApi:
         # Apply spoofing immediately if running
         if self._cached_status.get("ready", False):
             threading.Thread(
-                target=self.adb.apply_device_spoofing,
+                target=self._adb.apply_device_spoofing,
                 args=(res.get("device_profile", "asus_rog_8"), res.get("fps", 120)),
                 daemon=True
             ).start()
         return res
 
     def get_keymap_profiles(self):
-        return self.keymapper.list_profiles()
+        return self._keymapper.list_profiles()
 
     def load_keymap(self, filename):
-        return self.keymapper.load_profile(filename)
+        return self._keymapper.load_profile(filename)
 
     def set_keymapper_enabled(self, enabled):
-        self.keymapper.set_enabled(enabled)
+        self._keymapper.set_enabled(enabled)
         return True
 
     def cleanup(self):
         self._running_monitor = False
-        self.keymapper.stop()
+        self._keymapper.stop()
 
 def main():
     if getattr(sys, 'frozen', False):

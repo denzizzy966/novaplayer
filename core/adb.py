@@ -9,26 +9,56 @@ class ADBManager:
         self.config = load_settings()
         self.adb_path = self.config.get("adb_path", "adb")
         self.cached_device: Optional[str] = None
+        self._server_started = False
+
+    def _resolve_adb(self) -> Optional[str]:
+        if Path(self.adb_path).exists():
+            return self.adb_path
+        import shutil
+        return shutil.which("adb")
+
+    @staticmethod
+    def _hidden_window_kwargs() -> dict:
+        kwargs = {}
+        if hasattr(subprocess, 'STARTUPINFO'):
+            si = subprocess.STARTUPINFO()
+            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            kwargs["startupinfo"] = si
+        if hasattr(subprocess, 'CREATE_NO_WINDOW'):
+            kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+        return kwargs
+
+    def _ensure_server(self, adb_bin: str):
+        # The first adb command auto-spawns the adb server daemon. That daemon inherits
+        # our stdout/stderr pipes and never closes them, so subprocess.run(capture_output=True)
+        # blocks forever waiting for EOF (even after the timeout fires). Start the server
+        # explicitly once with every handle pointed at NUL so nothing can be inherited.
+        if self._server_started:
+            return
+        self._server_started = True
+        try:
+            subprocess.run(
+                [adb_bin, "start-server"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=20,
+                **self._hidden_window_kwargs()
+            )
+        except Exception as e:
+            print(f"[ADB] start-server failed: {e}")
 
     def _run_cmd(self, args: List[str], timeout: int = 5) -> subprocess.CompletedProcess:
-        adb_bin = self.adb_path
-        if not Path(adb_bin).exists():
-            import shutil
-            which = shutil.which("adb")
-            if which:
-                adb_bin = which
-            else:
-                return subprocess.CompletedProcess(args, returncode=1, stdout="", stderr="ADB not found")
+        adb_bin = self._resolve_adb()
+        if not adb_bin:
+            return subprocess.CompletedProcess(args, returncode=1, stdout="", stderr="ADB not found")
 
+        self._ensure_server(adb_bin)
         cmd = [adb_bin] + args
-        startupinfo = None
-        creationflags = 0
-        if hasattr(subprocess, 'STARTUPINFO'):
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        if hasattr(subprocess, 'CREATE_NO_WINDOW'):
-            creationflags |= subprocess.CREATE_NO_WINDOW
-            
+        hidden = self._hidden_window_kwargs()
+        startupinfo = hidden.get("startupinfo")
+        creationflags = hidden.get("creationflags", 0)
+
         try:
             return subprocess.run(
                 cmd,
@@ -190,13 +220,16 @@ class ADBManager:
         filepath = SCREENSHOTS_DIR / filename
         
         try:
-            cmd = [self.adb_path, "-s", dev, "exec-out", "screencap", "-p"]
-            startupinfo = None
-            if hasattr(subprocess, 'STARTUPINFO'):
-                startupinfo = subprocess.STARTUPINFO()
-                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            adb_bin = self._resolve_adb()
+            if not adb_bin:
+                return None
+            self._ensure_server(adb_bin)
+            cmd = [adb_bin, "-s", dev, "exec-out", "screencap", "-p"]
             with open(filepath, "wb") as f:
-                res = subprocess.run(cmd, stdout=f, timeout=10, startupinfo=startupinfo)
+                res = subprocess.run(
+                    cmd, stdin=subprocess.DEVNULL, stdout=f, stderr=subprocess.DEVNULL,
+                    timeout=10, **self._hidden_window_kwargs()
+                )
             if res.returncode == 0 and filepath.stat().st_size > 1000:
                 return str(filepath)
             return None
