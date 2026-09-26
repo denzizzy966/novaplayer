@@ -11,7 +11,16 @@ class ADBManager:
         self.cached_device: Optional[str] = None
 
     def _run_cmd(self, args: List[str], timeout: int = 5) -> subprocess.CompletedProcess:
-        cmd = [self.adb_path] + args
+        adb_bin = self.adb_path
+        if not Path(adb_bin).exists():
+            import shutil
+            which = shutil.which("adb")
+            if which:
+                adb_bin = which
+            else:
+                return subprocess.CompletedProcess(args, returncode=1, stdout="", stderr="ADB not found")
+
+        cmd = [adb_bin] + args
         startupinfo = None
         creationflags = 0
         if hasattr(subprocess, 'STARTUPINFO'):
@@ -19,16 +28,20 @@ class ADBManager:
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         if hasattr(subprocess, 'CREATE_NO_WINDOW'):
             creationflags |= subprocess.CREATE_NO_WINDOW
-        return subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            startupinfo=startupinfo,
-            creationflags=creationflags,
-            encoding="utf-8",
-            errors="ignore"
-        )
+            
+        try:
+            return subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                startupinfo=startupinfo,
+                creationflags=creationflags,
+                encoding="utf-8",
+                errors="ignore"
+            )
+        except Exception as e:
+            return subprocess.CompletedProcess(cmd, returncode=1, stdout="", stderr=str(e))
 
     def get_devices(self) -> List[str]:
         try:

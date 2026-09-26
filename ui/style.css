@@ -97,6 +97,8 @@ body {
 .subtitle {
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
 .header-right {
   display: flex;
   align-items: center;
@@ -595,13 +597,20 @@ input:checked + .slider:before { transform: translateX(18px); }
   color: var(--text-muted);
 }
 
-.setting-group select {
+.setting-group select,
+.setting-group input.input-text {
   background: rgba(13, 17, 23, 0.9);
   color: var(--text-main);
   border: 1px solid var(--border-color);
   padding: 10px;
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
+  outline: none;
+  width: 100%;
+}
+
+.setting-group input.input-text:focus {
+  border-color: var(--accent-cyan);
 }
 
 /* Sidebar Tools (BlueStacks / LDPlayer style) */

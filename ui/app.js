@@ -245,6 +245,9 @@ async function loadSettingsUI() {
     if (document.getElementById("cfgFps") && cfg.fps) {
       document.getElementById("cfgFps").value = String(cfg.fps);
     }
+    if (document.getElementById("cfgSdk") && cfg.sdk_path) {
+      document.getElementById("cfgSdk").value = cfg.sdk_path;
+    }
     
     document.getElementById("specRam").textContent = `${cfg.ram_mb || 4096} MB RAM`;
     document.getElementById("specCpu").textContent = `${cfg.cores || 4} Cores`;
@@ -264,6 +267,10 @@ async function saveSettings() {
     device_profile: document.getElementById("cfgDevice").value,
     fps: Number(document.getElementById("cfgFps").value)
   };
+  const sdkVal = document.getElementById("cfgSdk").value.trim();
+  if (sdkVal) {
+    data.sdk_path = sdkVal;
+  }
   await window.pywebview.api.save_settings(data);
   showToast("Settings & Device Identity applied!");
   loadSettingsUI();

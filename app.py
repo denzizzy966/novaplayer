@@ -175,12 +175,22 @@ def main():
     else:
         ui_dir = Path(__file__).resolve().parent / "ui"
         
-    index_html = ui_dir / "index.html"
+    html_file = ui_dir / "index.html"
+    css_file = ui_dir / "style.css"
+    js_file = ui_dir / "app.js"
+    
+    html_content = html_file.read_text(encoding="utf-8")
+    if css_file.exists():
+        css_content = css_file.read_text(encoding="utf-8")
+        html_content = html_content.replace('<link rel="stylesheet" href="style.css">', f"<style>\n{css_content}\n</style>")
+    if js_file.exists():
+        js_content = js_file.read_text(encoding="utf-8")
+        html_content = html_content.replace('<script src="app.js"></script>', f"<script>\n{js_content}\n</script>")
 
     api = EmuApi()
     window = webview.create_window(
         title="NovaPlayer - Android 14 Gaming Suite",
-        url=str(index_html),
+        html=html_content,
         js_api=api,
         width=1020,
         height=680,
@@ -191,7 +201,10 @@ def main():
     api.set_window(window)
     
     try:
-        webview.start(debug=False)
+        try:
+            webview.start(gui='edgechromium', debug=False)
+        except Exception:
+            webview.start(debug=False)
     finally:
         api.cleanup()
 

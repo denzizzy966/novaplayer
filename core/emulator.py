@@ -17,9 +17,28 @@ class EmulatorManager:
         if self.is_running():
             return {"success": False, "message": "Emulator is already running."}
 
+        from .config import ensure_avd_ready
         cfg = load_settings()
-        emulator_exe = cfg.get("emulator_path", r"D:\Android\Sdk\emulator\emulator.exe")
-        avd_name = cfg.get("avd_name", "NovaPlayer_A14")
+        
+        # Ensure AVD is ready on any computer
+        setup_res = ensure_avd_ready(cfg)
+        if not setup_res.get("success", False):
+            return setup_res
+            
+        avd_name = setup_res.get("avd_name", cfg.get("avd_name", "NovaPlayer_A14"))
+        emulator_exe = cfg.get("emulator_path", "emulator.exe")
+        
+        if not Path(emulator_exe).exists():
+            import shutil
+            which = shutil.which("emulator")
+            if which:
+                emulator_exe = which
+            else:
+                return {
+                    "success": False,
+                    "message": f"Emulator not found at: {emulator_exe}. Please configure Android SDK path in Settings."
+                }
+                
         ram_mb = cfg.get("ram_mb", 4096)
         cores = cfg.get("cores", 4)
         width = cfg.get("width", 1600)
